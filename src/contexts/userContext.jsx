@@ -13,10 +13,8 @@ export const CurrentUserProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Set up authentication state observer to get current user
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // If user is authenticated, fetch their data from Firestore
         const userDocRef = doc(db, 'users', user.uid); // Get the document for the current user by their UID
         try {
           const userDoc = await getDoc(userDocRef);
@@ -33,13 +31,11 @@ export const CurrentUserProvider = ({ children }) => {
           setError(error);
         }
       } else {
-        // If no user is authenticated, set currentUser to null
         setCurrentUser(null);
       }
       setLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 

@@ -1,6 +1,9 @@
 import Navbar from "./components/Navbar/Navbar";
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+
 import { ProductProvider } from './contexts/ProductContext';
+import { FavoriteProductsProvider } from "./contexts/FavoriteContext";
 
 import HomePage from "./pages/HomePage/HomePage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
@@ -12,12 +15,15 @@ import Order from "./pages/ProfilePage/Order";
 import OrderItem from "./pages/Order/OrderItem";
 import Checkout from "./pages/Order/Checkout";
 import DetailPage from "./pages/DetailPage/DetailPage";
+import Favorite from "./pages/Favorite/favorite";
 
 function App() {
   return (
     <CurrentUserProvider>
     <ProductProvider>
+    <FavoriteProductsProvider>
       <Router>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
         <ConditionalNavbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -26,12 +32,14 @@ function App() {
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/payment-options" element={<PaymentOption />} />
           <Route path="/order" element={<Order />} />
-          <Route path="/detailspage/:id" element={<DetailPage />} />
+          <Route path="/products/:id" element={<DetailPage />} />
+          <Route path="/favorite-collection" element={<Favorite />} />
           <Route path="/cart-item" element={<OrderItem />} />
           <Route path="/checkout" element={<Checkout />} />
           
         </Routes>
       </Router>
+      </FavoriteProductsProvider>
       </ProductProvider>
     </CurrentUserProvider>
   );

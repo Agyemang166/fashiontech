@@ -1,11 +1,11 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import Carousel from '../../components/Carousels/LandingCarousel';
 import ProductCard from '../../components/Card/ProductCard';
 import CircularMenuGrid from '../../components/Navbar/CircularMenuGrid';
 import { useProducts } from '../../contexts/ProductContext'; 
 
 const HomePage = () => {
-  const { productList, addToCart, toggleLike } = useProducts(); // Use the ProductContext
+  const { productList } = useProducts(); // Use the ProductContext
 
   return (
     <div>
@@ -16,9 +16,7 @@ const HomePage = () => {
           <ProductCard
             key={product.id}
             product={product}
-            addToCart={addToCart}
-            toggleFavorite={toggleLike} // Use toggleLike instead of toggleFavorite
-            isFavorited={product.liked} // Check the liked property of the product
+            isFavorited={product.liked} 
           />
         ))}
       </div>

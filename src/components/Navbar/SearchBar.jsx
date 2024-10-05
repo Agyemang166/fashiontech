@@ -1,18 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TextField, IconButton, Drawer, Box, List, ListItem, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useProducts } from '../../contexts/ProductContext'; // Import your ProductContext
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 
 const SearchBar = ({ closeSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(true); // Automatically open drawer when search is clicked
 
-  // Simulate search when typing (you can replace this with API call)
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  // Get productList and loading from ProductContext
+  const { productList, loading } = useProducts();
 
-    // Perform search logic here, for now just a dummy list
-    setSearchResults(['Product 1', 'Product 2', 'Product 3', 'Product 4']);
+  // Search function that filters products based on the search term
+  useEffect(() => {
+    if (!loading) {
+      if (searchTerm) {
+        const filteredResults = productList.filter(product => {
+          const term = searchTerm.toLowerCase();
+          return (
+            product.productName.toLowerCase().includes(term) || 
+            product.description.toLowerCase().includes(term) // Check description
+          );
+        });
+        setSearchResults(filteredResults);
+      } else {
+        setSearchResults([]) // Clear results when search term is empty
+      }
+    }
+  }, [searchTerm, productList, loading]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value); // Update the search term
   };
 
   const handleClose = () => {
@@ -53,9 +72,11 @@ const SearchBar = ({ closeSearch }) => {
           </Typography>
           <List>
             {searchResults.length > 0 ? (
-              searchResults.map((result, index) => (
-                <ListItem key={index} sx={{ padding: 1 }}>
-                  {result}
+              searchResults.map((result) => (
+                <ListItem key={result.id} sx={{ padding: 1 }}>
+                  <Link to={`/products/${result.id}`} style={{ textDecoration: 'none', color: 'inherit' }} onClick={handleClose}>
+                    {result.productName} 
+                  </Link>
                 </ListItem>
               ))
             ) : (

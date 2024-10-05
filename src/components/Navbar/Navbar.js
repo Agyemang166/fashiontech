@@ -22,7 +22,6 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="flex justify-between items-center p-4">
-        {/* Left: Drawer toggle button */}
         <button onClick={toggleDrawer} className="text-black">
           <FaBars size={24} />
         </button>

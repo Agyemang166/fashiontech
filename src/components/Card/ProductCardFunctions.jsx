@@ -30,13 +30,16 @@ export const addToCart = async (db, userId, product, currentPrice, navigate, set
   }
 
   try {
+    // Ensure you're storing product.id as well for easier reference when updating/removing
     const cartItemRef = doc(db, 'users', userId, 'cart', product.id);
     await setDoc(cartItemRef, {
-      name: product.productName,
-      image: product.images[0],
+      productId: product.id, // Store productId for future updates
+      productName: product.productName,
+      image: product.images[0], // Assuming the first image is being used
       quantity: quantity, // Set the quantity from the parameter
-      price: currentPrice,
+      price: currentPrice, // Store the current price
     });
+    
     setIsInCart(true);
     toast.success(`${product.productName} has been successfully added to your cart!`);
   } catch (error) {
@@ -44,15 +47,22 @@ export const addToCart = async (db, userId, product, currentPrice, navigate, set
   }
 };
 
+
 // Update cart item quantity
 export const updateCartItemQuantity = async (db, userId, productId, quantity) => {
+  if (!userId || !productId || typeof quantity !== 'number') {
+    console.error("Invalid parameters passed to updateCartItemQuantity:", { userId, productId, quantity });
+    return;
+  }
+
   try {
     const cartItemRef = doc(db, 'users', userId, 'cart', productId);
     await setDoc(cartItemRef, { quantity: quantity }, { merge: true });
   } catch (error) {
-    console.error("Error updating cart item quantity: ", error);
+    console.error("Error updating cart item quantity:", error);
   }
 };
+
 
 // Remove item from cart without resetting quantity
 // Completely remove the item from cart
@@ -98,7 +108,7 @@ export const toggleFavorite = async (db, userId, product, isFavorite, navigate, 
       await setDoc(favoriteItemRef, {
         // Copy all relevant product properties to the favorites
         id: product.id,
-        name: product.productName,
+        productName: product.productName,
         images: product.images,
         price: product.price,
         description: product.description, // Include additional properties as needed

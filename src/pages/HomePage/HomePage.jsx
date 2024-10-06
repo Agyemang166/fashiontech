@@ -10,7 +10,10 @@ const HomePage = () => {
   return (
     <div>
       <Carousel />
-      <CircularMenuGrid />
+      <div className='p-2'>
+            <CircularMenuGrid />
+      </div>
+
       <div className="grid grid-cols-2 gap-4 md:grid-cols-6 lg:grid-cols-6">
         {productList.map(product => (
           <ProductCard

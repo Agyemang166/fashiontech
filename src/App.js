@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';
 
 import { ProductProvider } from './contexts/ProductContext';
 import { FavoriteProductsProvider } from "./contexts/FavoriteContext";
+import { CartProductsProvider } from './contexts/CartContext';
 
 import HomePage from "./pages/HomePage/HomePage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
@@ -21,6 +22,7 @@ function App() {
   return (
     <CurrentUserProvider>
     <ProductProvider>
+    <CartProductsProvider>
     <FavoriteProductsProvider>
       <Router>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
@@ -40,6 +42,7 @@ function App() {
         </Routes>
       </Router>
       </FavoriteProductsProvider>
+      </CartProductsProvider>
       </ProductProvider>
     </CurrentUserProvider>
   );

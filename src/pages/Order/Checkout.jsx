@@ -1,29 +1,120 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useCurrentUser } from '../../contexts/userContext'; // Importing the user context
+import { useCartProducts } from '../../contexts/CartContext'; // Import cart context to get total price
+import { PaystackButton } from 'react-paystack';
+import { db } from '../../services/firebaseConfig'; // Firestore configuration
+import { collection, addDoc } from 'firebase/firestore'; // Firestore methods
+import { useNavigate } from 'react-router-dom'; // Import useHistory for redirection
+import Confetti from 'react-confetti'; // Import confetti for success effect
 
 const Checkout = () => {
+  const { currentUser } = useCurrentUser(); // Access the current user's details from the context
+  const { cartProducts, clearCart } = useCartProducts(); // Get cart products and clearCart function
   const [name, setName] = useState('');
+  const [email, setEmail] = useState(''); // Email field added
   const [address, setAddress] = useState('');
   const [deliveryLocation, setDeliveryLocation] = useState('');
   const [phone, setPhone] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
-  const [isUrgent, setIsUrgent] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0); // To store total cart amount
+  const [isSuccess, setIsSuccess] = useState(false); // State to track payment success
+  const navigate = useNavigate(); // Hook for redirection
+
+  // Pre-fill the user's name and email when the component mounts
+  useEffect(() => {
+    if (currentUser) {
+      setName(currentUser.name || ''); // Assuming the user object has a `name` property
+      setEmail(currentUser.email || ''); // Assuming the user object has an `email` property
+    }
+  }, [currentUser]);
+
+  // Calculate the total amount of the cart
+  useEffect(() => {
+    const calculateTotal = () => {
+      return cartProducts.reduce((total, item) => {
+        return total + item.price * item.quantity;
+      }, 0);
+    };
+    setTotalAmount(calculateTotal());
+  }, [cartProducts]);
+
+  // Paystack configuration
+  const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
+  const amount = totalAmount * 100; // Multiply total by 100 as Paystack uses the smallest currency unit (i.e. GHS * 100)
+  const componentProps = {
+    email,
+    amount,
+    currency: 'GHS', // Set currency to GHS for Ghanaian Cedis
+    metadata: {
+      name,
+      phone,
+    },
+    publicKey,
+    text: "Pay Now",
+    onSuccess: async (response) => {
+      alert("Payment Successful");
+      const orderId = await handleOrderCreation(); // Call function to handle order creation
+      clearCart(); // Clear the cart after the order is created
+      setIsSuccess(true); // Set success state
+      navigate('/'); // Redirect to the home page after success
+    },
+    onClose: () => alert("Transaction was not completed"),
+  };
+
+  // Function to handle order creation and storing in both collections
+  const handleOrderCreation = async () => {
+    try {
+      // Create an order in the main orders collection
+      const ordersRef = collection(db, 'orders');
+      const orderData = {
+        userId: currentUser.id,
+        name,
+        email,
+        address,
+        deliveryLocation,
+        phone,
+        deliveryInstructions,
+        totalAmount,
+        cartItems: cartProducts,
+        createdAt: new Date(),
+      };
+      const orderDocRef = await addDoc(ordersRef, orderData); // Save order to main collection
+
+      // Create a subcollection for the user
+      const userOrdersRef = collection(db, 'users', currentUser.id, 'orders');
+      await addDoc(userOrdersRef, { ...orderData, orderId: orderDocRef.id }); // Save order to user-specific subcollection
+
+      console.log('Order created successfully:', orderDocRef.id);
+      return orderDocRef.id; // Return the order ID if needed
+    } catch (error) {
+      console.error('Error creating order:', error);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission logic here, such as sending data to your API
+    // Perform form validation
+    if (!name || !email || !address || !deliveryLocation || !phone) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
     console.log({
       name,
+      email,
       address,
       deliveryLocation,
       phone,
       deliveryInstructions,
+      totalAmount,
     });
   };
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-lg overflow-hidden mt-5">
+      {isSuccess && <Confetti />} {/* Show confetti if payment is successful */}
       <div className="px-4 py-2">
-        <h2 className="text-lg font-medium text-gray-900">Checkout</h2>
+        <h2 className="text-1xl font-bold tracking-tight text-gray-900">Checkout</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="px-4 py-6">
@@ -39,6 +130,21 @@ const Checkout = () => {
             required
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             placeholder="Enter your name"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            placeholder="Enter your email"
           />
         </div>
 
@@ -70,7 +176,6 @@ const Checkout = () => {
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             placeholder="Please Enter Valid Delivery Location"
           />
-          {/* Here you could integrate a map component to choose delivery location */}
         </div>
 
         <div className="mb-4">
@@ -87,6 +192,7 @@ const Checkout = () => {
             placeholder="Enter your phone number"
           />
         </div>
+
         <div className="mb-4">
           <label htmlFor="delivery-instructions" className="block text-sm font-medium text-gray-700">
             Delivery Instructions
@@ -101,12 +207,11 @@ const Checkout = () => {
         </div>
 
         <div className="mt-6">
-          <button
-            type="submit"
-            className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
-          >
-            Confirm Order
-          </button>
+          <PaystackButton
+            className={`bg-indigo-600 text-white px-6 py-3 rounded-md ${!name || !email || !address || !deliveryLocation || !phone ? 'opacity-50 cursor-not-allowed' : ''}`}
+            {...componentProps}
+            disabled={!name || !email || !address || !deliveryLocation || !phone} // Disable button if fields are empty
+          />
         </div>
       </form>
     </div>

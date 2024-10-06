@@ -5,6 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import { ProductProvider } from './contexts/ProductContext';
 import { FavoriteProductsProvider } from "./contexts/FavoriteContext";
 import { CartProductsProvider } from './contexts/CartContext';
+import { OrdersProvider } from "./contexts/OrderContext";
 
 import HomePage from "./pages/HomePage/HomePage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
@@ -24,6 +25,7 @@ function App() {
     <ProductProvider>
     <CartProductsProvider>
     <FavoriteProductsProvider>
+    <OrdersProvider>
       <Router>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
         <ConditionalNavbar />
@@ -41,6 +43,7 @@ function App() {
           
         </Routes>
       </Router>
+      </OrdersProvider>
       </FavoriteProductsProvider>
       </CartProductsProvider>
       </ProductProvider>

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { db } from '../../services/firebaseConfig';
 import { useCurrentUser } from '../../contexts/userContext';
 import styles from './ProductCardStyles'; 
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { FaHeart, FaRegHeart } from 'react-icons/fa'; 
 import {
   subscribeToFavorites,
@@ -18,13 +18,30 @@ const ProductCard = ({ product }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const [currentPrice, setCurrentPrice] = useState(product.discount > 0 ? product.discountedPrice : product.price);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { currentUser } = useCurrentUser();
   const userId = currentUser ? currentUser.id : null;
 
+  // New state for cart items
+  const [cartItems, setCartItems] = useState([]);
+
   useEffect(() => {
     const unsubscribeFromFavorites = userId ? subscribeToFavorites(db, userId, product.id, setIsFavorite) : null;
     const unsubscribeFromProduct = subscribeToProduct(db, product.id, setCurrentPrice);
+
+    // Fetch cart items when the user is logged in
+    const fetchCartItems = async () => {
+      if (userId) {
+        const cartRef = collection(db, 'users', userId, 'cart');
+        const cartSnap = await getDocs(cartRef);
+        const cartItemsData = cartSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCartItems(cartItemsData);
+        setIsInCart(cartItemsData.some(item => item.id === product.id));
+      }
+    };
+
+    fetchCartItems();
 
     return () => {
       if (unsubscribeFromFavorites) unsubscribeFromFavorites();
@@ -32,31 +49,27 @@ const ProductCard = ({ product }) => {
     };
   }, [userId, product.id]);
 
-  useEffect(() => {
-    const checkIfInCart = async () => {
-      if (userId) {
-        const cartItemRef = doc(db, 'users', userId, 'cart', product.id);
-        const docSnap = await getDoc(cartItemRef);
-        setIsInCart(docSnap.exists());
-      }
-    };
+  const handleAddToCart = async () => {
+    setLoading(true);
+    await addToCart(db, userId, product, currentPrice, navigate, setIsInCart, 1);
+    setLoading(false);
+  };
 
-    checkIfInCart();
-  }, [userId, product.id]);
+  const handleRemoveFromCart = async () => {
+    setLoading(true);
+    await removeFromCart(db, userId, product, navigate, setIsInCart);
+    setLoading(false);
+  };
 
-  const handleAddToCart = () => addToCart(db, userId, product, currentPrice, navigate, setIsInCart, 1);
-  const handleRemoveFromCart = () => removeFromCart(db, userId, product, navigate, setIsInCart);
   const handleFavoriteClick = () => toggleFavorite(db, userId, product, isFavorite, setIsFavorite);
 
   const formatPrice = (price) => {
-    const [whole, decimal] = price.toFixed(2).split('.');
-    return (
-      <>
-        <span style={styles.priceCurrency}>₵ </span>
-        <span style={styles.priceWhole}>{whole}</span>
-        <span style={styles.priceDecimal}>.{decimal}</span>
-      </>
-    );
+    return new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: 'GHC',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price);
   };
 
   return (
@@ -90,11 +103,23 @@ const ProductCard = ({ product }) => {
       </Link>
       <div style={styles.addButtonContainer}>
         {!isInCart ? (
-          <button style={styles.addButton} onClick={handleAddToCart}>Add to Cart</button>
+          loading ? (
+            <button style={styles.addButton} disabled>
+              Adding...
+            </button>
+          ) : (
+            <button style={styles.addButton} onClick={handleAddToCart}>Add to Cart</button>
+          )
         ) : (
-          <button style={styles.viewCartButton} onClick={handleRemoveFromCart}>
-            Remove from Cart
-          </button>
+          loading ? (
+            <button style={styles.viewCartButton} disabled>
+              Removing...
+            </button>
+          ) : (
+            <button style={styles.viewCartButton} onClick={handleRemoveFromCart}>
+              Remove from Cart
+            </button>
+          )
         )}
       </div>
     </div>

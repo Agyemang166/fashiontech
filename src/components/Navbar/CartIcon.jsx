@@ -31,7 +31,7 @@ const CartIcon = () => {
       </IconButton>
 
       {/* Small rounded box below the icon for the total amount */}
-      <div className="absolute mt-[-10px] right-0 bg-black text-white text-[10px] font-bold px-2 rounded-full">
+      <div className="absolute mt-[-10px] right-[-8px] bg-black text-white text-[10px] font-bold px-2 rounded-full">
       ₵{cartTotal}
       </div>
     </div>

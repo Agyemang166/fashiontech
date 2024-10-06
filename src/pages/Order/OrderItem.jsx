@@ -4,7 +4,8 @@ import { useCartProducts } from '../../contexts/CartContext'; // Import the Cart
 import { removeFromCart, updateCartItemQuantity } from '../../components/Card/ProductCardFunctions'; // Import the required functions
 import { db } from '../../services/firebaseConfig'; // Adjust the import path for your firebase config
 import { useCurrentUser } from '../../contexts/userContext'; // Assuming you have an AuthContext for current user
-import Empty from '../../Assets/Empty.gif'
+import Empty from '../../Assets/Empty.gif';
+import { FaTimes } from "react-icons/fa";
 
 export default function OrderItem() {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ export default function OrderItem() {
         console.error('Quantity cannot be less than 1'); // You can also show an alert or notification
         return;
       }
+      // Update the cart item's quantity in Firebase
       await updateCartItemQuantity(db, userId, productId, newQuantity);
     } else {
       console.error('User ID is not defined');
@@ -78,7 +80,7 @@ export default function OrderItem() {
           onClick={() => navigate('/')}
           className="text-indigo-600 hover:text-indigo-500 font-medium"
         >
-          Close
+        <FaTimes size={30} color='black'/>
         </button>
       </div>
 
@@ -99,11 +101,18 @@ export default function OrderItem() {
                   <div>
                     <div className="flex justify-between text-base font-medium text-gray-900">
                       <h3>
-                        <a href="/detailspage">{item.productName }</a>
+                        <a href={`/detailspage/${item.id}`}>{item.productName }</a>
                       </h3>
                       <div className="flex flex-col items-end">
-                        <p className="ml-4">GHC {item.price.toFixed(2)}</p> {/* Price on top */}
-                        <button
+                      <p className="ml-4">
+                      {new Intl.NumberFormat('en-GH', {
+                        style: 'currency',
+                        currency: 'GHC',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(item.price)}
+                    </p> 
+                                            <button
                           onClick={() => handleDelete(item.id)} // Handle delete item
                           className="mt-1 text-red-600 hover:text-red-500 font-medium"
                         >
@@ -143,7 +152,14 @@ export default function OrderItem() {
       <div className="border-t border-gray-200 px-4 py-6">
         <div className="flex justify-between text-base font-medium text-gray-900">
           <p>Total</p>
-          <p>GHC {calculateTotal()}</p>
+          <p>
+  {new Intl.NumberFormat('en-GH', {
+    style: 'currency',
+    currency: 'GHC',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(calculateTotal())}
+</p>
         </div>
         <p className="mt-0.5 text-sm text-gray-500">Shipping and taxes calculated at checkout.</p>
         <div className="mt-6">

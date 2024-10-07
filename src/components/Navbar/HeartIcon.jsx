@@ -16,7 +16,7 @@ const HeartIcon = () => {
   return (
     <IconButton className="text-white" onClick={handleIconClick}> 
       <Badge badgeContent={favoriteCount} color="bg-black" classes={{ badge: 'bg-black-500 text-black' }}>
-        <CiHeart />
+        <CiHeart size={30}/>
       </Badge>
     </IconButton>
   );

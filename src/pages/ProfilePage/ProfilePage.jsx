@@ -57,7 +57,7 @@ const ProfilePage = () => {
           <Divider />
 
           {/* Wishlist */}
-          <ListItem button onClick={() => navigate('/wishlist')}>
+          <ListItem button onClick={() => navigate('/favorite-collection')}>
             <ListItemIcon>
               <FavoriteBorder sx={{ color: '#0073e6' }} />
             </ListItemIcon>

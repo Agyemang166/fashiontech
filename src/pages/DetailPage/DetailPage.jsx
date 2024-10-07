@@ -194,7 +194,7 @@ export default function DetailPage() {
         <Slider {...settings} className="h-[400px] w-full">
           {product.images.map((image, index) => (
             <div key={index} className="h-full flex items-center justify-center">
-              <img src={image} alt={`${product.productName} ${index + 1}`} className="h-full object-cover w-full" />
+              <img src={image} alt={`${product.productName} ${index + 1} - MALLZONIX`} className="h-full object-cover w-full" />
             </div>
           ))}
         </Slider>
@@ -252,7 +252,7 @@ export default function DetailPage() {
             <p>{reviews.length} {reviews.length > 1 ? 'reviews' : 'review'}</p>
           </div>
         ) : (
-          <p>Be the first to add a review.</p>
+          <p>Be the first to add a review to this Mallzonix Item.</p>
         )}
 
         {reviews.length > 0 && (

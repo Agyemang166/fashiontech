@@ -18,7 +18,7 @@ export const handleGoogleSignUp = async (navigate) => {
     });
 
     // Show welcome prompt and redirect
-    const welcomeMessage = window.confirm(`Welcome to FASHIONTECHMALL, ${user.displayName}! Click OK to continue.`);
+    const welcomeMessage = window.confirm(`Welcome to MALLZONIX, ${user.displayName}! Click OK to continue.`);
     
     if (welcomeMessage) {
       navigate('/'); // Redirect to home page

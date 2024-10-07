@@ -23,17 +23,22 @@ const Checkout = () => {
   // Pre-fill the user's name and email when the component mounts
   useEffect(() => {
     if (currentUser) {
+      console.log('Pre-filling user details:', currentUser);
       setName(currentUser.name || ''); // Assuming the user object has a `name` property
       setEmail(currentUser.email || ''); // Assuming the user object has an `email` property
+    } else {
+      console.warn('No current user found!');
     }
   }, [currentUser]);
 
   // Calculate the total amount of the cart
   useEffect(() => {
     const calculateTotal = () => {
-      return cartProducts.reduce((total, item) => {
+      const total = cartProducts.reduce((total, item) => {
         return total + item.price * item.quantity;
       }, 0);
+      console.log('Total cart amount calculated:', total);
+      return total;
     };
     setTotalAmount(calculateTotal());
   }, [cartProducts]);
@@ -41,10 +46,11 @@ const Checkout = () => {
   // Paystack configuration
   const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
   const amount = totalAmount * 100; // Multiply total by 100 as Paystack uses the smallest currency unit (i.e. GHS * 100)
+
   const componentProps = {
     email,
     amount,
-    currency: 'GHS', // Set currency to GHS for Ghanaian Cedis
+    currency: 'GHS',
     metadata: {
       name,
       phone,
@@ -52,13 +58,49 @@ const Checkout = () => {
     publicKey,
     text: "Pay Now",
     onSuccess: async (response) => {
+      console.log('Payment successful! Paystack response:', response);
       alert("Payment Successful");
-      const orderId = await handleOrderCreation(); // Call function to handle order creation
-      clearCart(); // Clear the cart after the order is created
-      setIsSuccess(true); // Set success state
-      navigate('/'); // Redirect to the home page after success
+
+      // Create the order and send email
+      const orderId = await handleOrderCreation();
+
+      // Prepare email data
+      const emailData = {
+        name,
+        email,
+        cartItems: cartProducts,
+        totalAmount,
+      };
+
+      // Send email notification
+      try {
+        console.log('Sending email data:', emailData); // Debugging line
+        const res = await fetch('https://mallzonix-backend1.onrender.com/api/sendOrderNotification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        });
+
+        // Log the response to check for errors
+        if (!res.ok) {
+          throw new Error('Failed to send email');
+        }
+
+        console.log('Email sent successfully');
+      } catch (error) {
+        console.error('Error sending email:', error);
+      }
+
+      clearCart();
+      setIsSuccess(true);
+      navigate('/');
     },
-    onClose: () => alert("Transaction was not completed"),
+    onClose: () => {
+      console.warn("Transaction was not completed.");
+      alert("Transaction was not completed");
+    },
   };
 
   // Function to handle order creation and storing in both collections
@@ -84,7 +126,6 @@ const Checkout = () => {
       const userOrdersRef = collection(db, 'users', currentUser.id, 'orders');
       await addDoc(userOrdersRef, { ...orderData, orderId: orderDocRef.id }); // Save order to user-specific subcollection
 
-      console.log('Order created successfully:', orderDocRef.id);
       return orderDocRef.id; // Return the order ID if needed
     } catch (error) {
       console.error('Error creating order:', error);
@@ -96,18 +137,9 @@ const Checkout = () => {
     // Perform form validation
     if (!name || !email || !address || !deliveryLocation || !phone) {
       alert("Please fill in all required fields.");
+      console.warn('Form validation failed. Missing required fields.');
       return;
     }
-
-    console.log({
-      name,
-      email,
-      address,
-      deliveryLocation,
-      phone,
-      deliveryInstructions,
-      totalAmount,
-    });
   };
 
   return (

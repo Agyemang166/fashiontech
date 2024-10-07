@@ -29,7 +29,7 @@ const DrawerContent = ({ closeDrawer, isOpen }) => {
     <div className={`fixed left-0 top-0 h-full w-[350px] bg-white shadow-lg p-4 drawer-content transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-500 ease-in-out overflow-y-auto`}>
       {/* Close Icon */}
       <div className="flex justify-between items-center mb-4 mt-3">
-        <h2 className="text-2xl font-bold text-black">FASHIONTECH</h2>
+        <h2 className="text-2xl font-bold text-black">MALLZONIX</h2>
         <FaTimes 
           onClick={() => setTimeout(closeDrawer, 300)} 
           className="cursor-pointer text-black transition-transform duration-300 ease-in-out" 

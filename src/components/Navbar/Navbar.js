@@ -34,7 +34,7 @@ const Navbar = () => {
           {!searchOpen ? (
             <>
               <button onClick={toggleSearch} className="text-black">
-                <CiSearch size={24} />
+                <CiSearch size={30} />
               </button>
               <HeartIcon />
               <CartIcon />

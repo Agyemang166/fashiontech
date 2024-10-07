@@ -3,7 +3,7 @@ import React from 'react';
 const Logo = () => {
   return (
     <div className="mx-auto">
-      <h1 className="text-2xl font-[900] text-black">FASHIONTECH</h1>
+      <h1 className="text-2xl font-[900] text-black">MALLZONIX</h1>
     </div>
   );
 };

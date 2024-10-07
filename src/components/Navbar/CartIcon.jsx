@@ -26,7 +26,7 @@ const CartIcon = () => {
           badgeContent={cartCount || 0} // Use 0 if cartCount is 0
           classes={{ badge: 'bg-black text-white' }}
         >
-          <CiShoppingCart size={24} />
+          <CiShoppingCart size={30} />
         </Badge>
       </IconButton>
 

@@ -76,7 +76,11 @@ const ProductCard = ({ product }) => {
     <div style={styles.card}>
       <div style={styles.imageContainer}>
         <Link to={`/products/${product.id}`}>
-          <img src={product.images[0]} alt={product.productName} style={styles.image} />
+          <img 
+            src={product.images[0]} 
+            alt={`Shop ${product.productName} at MALLZONIC - Your go-to place for apparel, cosmetics, drinks, electronics, and more`} 
+            style={styles.image} 
+          />
         </Link>
         <button onClick={handleFavoriteClick} style={styles.heartButton}>
           {isFavorite ? <FaHeart style={styles.heartIcon} color="red" /> : <FaRegHeart style={styles.heartIcon} />}

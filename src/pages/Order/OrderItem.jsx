@@ -61,7 +61,7 @@ export default function OrderItem() {
           alt="Empty Cart" 
           className="mb-4" 
         />
-        <p className="text-lg text-gray-700 mb-4">Your cart is empty.</p>
+        <p className="text-lg text-gray-700 mb-4">Your Mallzonix cart is empty.</p>
         <button
           onClick={() => navigate('/')}
           className="bg-black text-white px-4 py-2 rounded-md"

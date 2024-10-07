@@ -30,7 +30,7 @@ const Favorite = () => {
               alt="No favorites" 
               className="mb-4 w-1/2 md:w-1/3 lg:w-1/4" // Increased GIF size
             />
-            <p>No favorite products added yet.</p>
+            <p>No Mallzonix favorite products added yet.</p>
             <button 
               onClick={() => navigate('/')} 
               className="mt-4 bg-black text-white py-2 px-4 rounded" // Styled button

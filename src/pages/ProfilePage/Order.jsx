@@ -19,7 +19,7 @@ const OrdersPage = () => {
       <h2 className="text-2xl font-bold mb-4 ml-3">Your Orders</h2>
       {orders.length === 0 ? (
         <div className="flex flex-col items-center">
-          <img src={emptyOrdersGif} alt="No Orders Available" className="w-1/2 mb-4" />
+          <img src={emptyOrdersGif} alt="No Mallzonix Orders Available" className="w-1/2 mb-4" />
           <p className="text-gray-700">No orders available.</p>
           <button
           onClick={() => navigate('/')}
@@ -39,7 +39,7 @@ const OrdersPage = () => {
               <h3 className="text-lg font-semibold">Order ID: {order.id}</h3>
               <p className="">Total Amount: GHS {order.totalAmount}</p>
               <p className="text-sm text-gray-600">
-                Status: {order.status || 'Received by Technest'}
+                Status: {order.status || 'Received by MALLZONIX'}
               </p>
             </div>
           ))}

@@ -15,7 +15,10 @@ export const ProductProvider = ({ children }) => {
         ...doc.data(),
         liked: false, // Initialize liked property
       }));
-      setProductList(productsData); // Set the fetched products to state
+
+      // Shuffle the products after fetching
+      const shuffledProducts = shuffleArray(productsData);
+      setProductList(shuffledProducts); // Set the fetched products to state
       setLoading(false); // Set loading to false once data is fetched
     }, (error) => {
       console.error("Error fetching products: ", error);
@@ -25,6 +28,11 @@ export const ProductProvider = ({ children }) => {
     // Clean up the subscription on unmount
     return () => unsubscribe();
   }, []); // Empty dependency array means this runs once after the initial render
+
+  // Function to shuffle the array
+  const shuffleArray = (array) => {
+    return array.sort(() => Math.random() - 0.5);
+  };
 
   return (
     <ProductContext.Provider value={{ productList, loading }}>

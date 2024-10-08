@@ -11,7 +11,7 @@ import {
   addToCart,
   removeFromCart,
   toggleFavorite,
-} from './ProductCardFunctions'; // Import functions
+} from './ProductCardFunctions';
 import 'react-toastify/dist/ReactToastify.css';
 
 const ProductCard = ({ product }) => {
@@ -23,14 +23,12 @@ const ProductCard = ({ product }) => {
   const { currentUser } = useCurrentUser();
   const userId = currentUser ? currentUser.id : null;
 
-  // New state for cart items
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
     const unsubscribeFromFavorites = userId ? subscribeToFavorites(db, userId, product.id, setIsFavorite) : null;
     const unsubscribeFromProduct = subscribeToProduct(db, product.id, setCurrentPrice);
 
-    // Fetch cart items when the user is logged in
     const fetchCartItems = async () => {
       if (userId) {
         const cartRef = collection(db, 'users', userId, 'cart');
@@ -82,7 +80,11 @@ const ProductCard = ({ product }) => {
             style={styles.image} 
           />
         </Link>
-        <button onClick={handleFavoriteClick} style={styles.heartButton}>
+        <button 
+          onClick={handleFavoriteClick} 
+          style={styles.heartButton} 
+          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        >
           {isFavorite ? <FaHeart style={styles.heartIcon} color="red" /> : <FaRegHeart style={styles.heartIcon} />}
         </button>
       </div>
@@ -108,19 +110,29 @@ const ProductCard = ({ product }) => {
       <div style={styles.addButtonContainer}>
         {!isInCart ? (
           loading ? (
-            <button style={styles.addButton} disabled>
+            <button style={styles.addButton} disabled aria-label="Adding item to cart">
               Adding...
             </button>
           ) : (
-            <button style={styles.addButton} onClick={handleAddToCart}>Add to Cart</button>
+            <button 
+              style={styles.addButton} 
+              onClick={handleAddToCart} 
+              aria-label="Add to cart"
+            >
+              Add to Cart
+            </button>
           )
         ) : (
           loading ? (
-            <button style={styles.viewCartButton} disabled>
+            <button style={styles.viewCartButton} disabled aria-label="Removing item from cart">
               Removing...
             </button>
           ) : (
-            <button style={styles.viewCartButton} onClick={handleRemoveFromCart}>
+            <button 
+              style={styles.viewCartButton} 
+              onClick={handleRemoveFromCart} 
+              aria-label="Remove from cart"
+            >
               Remove from Cart
             </button>
           )

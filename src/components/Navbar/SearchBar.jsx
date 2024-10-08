@@ -25,7 +25,7 @@ const SearchBar = ({ closeSearch }) => {
         });
         setSearchResults(filteredResults);
       } else {
-        setSearchResults([]) // Clear results when search term is empty
+        setSearchResults([]); // Clear results when search term is empty
       }
     }
   }, [searchTerm, productList, loading]);
@@ -58,9 +58,10 @@ const SearchBar = ({ closeSearch }) => {
             placeholder="Search for techest products..."
             value={searchTerm}
             onChange={handleSearchChange}
+            aria-label="Search products"
           />
           {/* Close Button next to Search Input */}
-          <IconButton onClick={handleClose} sx={{ marginLeft: 1 }}>
+          <IconButton onClick={handleClose} sx={{ marginLeft: 1 }} aria-label="Close search drawer">
             <CloseIcon />
           </IconButton>
         </Box>
@@ -74,7 +75,12 @@ const SearchBar = ({ closeSearch }) => {
             {searchResults.length > 0 ? (
               searchResults.map((result) => (
                 <ListItem key={result.id} sx={{ padding: 1 }}>
-                  <Link to={`/products/${result.id}`} style={{ textDecoration: 'none', color: 'inherit' }} onClick={handleClose}>
+                  <Link 
+                    to={`/products/${result.id}`} 
+                    style={{ textDecoration: 'none', color: 'inherit' }} 
+                    onClick={handleClose}
+                    aria-label={`View details for ${result.productName}`} // Accessibility for link
+                  >
                     {result.productName} 
                   </Link>
                 </ListItem>

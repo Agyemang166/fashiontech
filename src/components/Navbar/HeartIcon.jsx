@@ -14,9 +14,13 @@ const HeartIcon = () => {
   };
 
   return (
-    <IconButton className="text-white" onClick={handleIconClick}> 
+    <IconButton 
+      className="text-white" 
+      onClick={handleIconClick}
+      aria-label={`View favorites, you have ${favoriteCount} items`}
+    > 
       <Badge badgeContent={favoriteCount} color="bg-black" classes={{ badge: 'bg-black-500 text-black' }}>
-        <CiHeart size={30}/>
+        <CiHeart size={30} />
       </Badge>
     </IconButton>
   );

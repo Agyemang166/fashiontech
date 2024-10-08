@@ -9,6 +9,7 @@ import { collection, doc, updateDoc, arrayUnion, getDoc, arrayRemove } from "fir
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css"; 
+import DetailPagePlaceholder from './DetailPagePlaceholder';
 
 const settings = {
   dots: true,
@@ -29,7 +30,7 @@ export default function DetailPage() {
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
-  const [currentPrice, setCurrentPrice] = useState(product?.price || 0);
+  const [currentPrice, setCurrentPrice] = useState(0); // Initialize to 0
   const [quantity, setQuantity] = useState(1); 
   const [reviewText, setReviewText] = useState(''); 
   const [rating, setRating] = useState(0); 
@@ -91,7 +92,7 @@ export default function DetailPage() {
     } else {
       localStorage.setItem(`quantity_${id}`, quantity); // Save quantity when not in cart
     }
-  }, [quantity, isInCart, db, userId, product.id]);
+  }, [quantity, isInCart, db, userId, product?.id]);
 
   const handleAddToCart = useCallback(() => {
     if (isInCart) {
@@ -160,6 +161,17 @@ export default function DetailPage() {
     }
   };
 
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.productName} - MALLZONIX`;
+    } else {
+      document.title = 'MALLZONIX'; 
+    }
+    return () => {
+      document.title = 'MALLZONIX'; 
+    };
+  }, [product]);
+
   const handleEditReview = (review) => {
     setReviewText(review.text);
     setRating(review.rating);
@@ -185,7 +197,7 @@ export default function DetailPage() {
     </div>
   ), []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <DetailPagePlaceholder/>;
   if (!product) return <div>Product not found</div>;
 
   return (
@@ -193,15 +205,19 @@ export default function DetailPage() {
       <div className="w-full overflow-hidden">
         <Slider {...settings} className="h-[400px] w-full">
           {product.images.map((image, index) => (
-            <div key={index} className="h-full flex items-center justify-center">
-              <img src={image} alt={`${product.productName} ${index + 1} - MALLZONIX`} className="h-full object-cover w-full" />
-            </div>
+            <div key={index} className="flex items-center justify-center w-full">
+            <img
+              src={image}
+              alt={`${product.productName} ${index + 1} - MALLZONIX`}
+              className="w-full max-h-[450px] object-cover" // Use object-cover for proper fitting
+            />
+          </div>
           ))}
         </Slider>
       </div>
 
       <h2 className="text-2xl font-bold tracking-tight text-gray-900">{product.productName}</h2>
-      <div className="flex justify-between items-center my-4">
+      <div className="flex justify-between items-center my-2">
         {product.discount ? (
           <div>
             <span className="text-lg font-semibold text-red-600">GHC {currentPrice.toFixed(2)}</span>
@@ -210,9 +226,6 @@ export default function DetailPage() {
         ) : (
           <span className="text-lg font-semibold text-gray-800">GHC {currentPrice.toFixed(2)}</span>
         )}
-        <button onClick={handleToggleFavorite}>
-          {isFavorite ? <FaHeart className="text-red-600" size={30}/> : <FaHeart className="text-gray-300" size={30}/>}
-        </button>
       </div>
 
       <div className="flex items-center my-4">
@@ -221,19 +234,36 @@ export default function DetailPage() {
           type="text"
           value={quantity}
           readOnly
-          className="border border-gray-300 text-center w-12"
+          className="border border-gray-300 text-center p-1 w-12"
         />
         <button onClick={incrementQuantity} className="bg-gray-300 rounded-r-md px-3 py-1">+</button>
       </div>
-      <button onClick={handleAddToCart} className={`w-full mb-5 py-2 ${isInCart ? 'bg-red-500' : 'bg-green-500'} text-white rounded`}>
+
+
+      
+      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg flex justify-between items-center border-t-2 border-[ #b2a0a0]">
+      <button onClick={handleToggleFavorite}>
+        {isFavorite ? (
+          <FaHeart className="text-red-600 mr-5" size={30} />
+        ) : (
+          <FaHeart className="text-gray-300 mr-5" size={30} />
+        )}
+      </button>
+    
+      <button
+        onClick={handleAddToCart}
+        className={`w-full py-2 ${isInCart ? 'bg-red-500' : 'bg-green-500'} text-white rounded`}
+      >
         {isInCart ? 'Remove from Cart' : 'Add to Cart'}
       </button>
+    </div>
+    
 
       <p className="text-1xl font-bold tracking-tight text-gray-900 mt-5">Product Description</p>
       <p className="tracking-tight text-gray-900">{product.description}</p>
 
       {/* Review Section */}
-      <div className="my-6">
+      <div className="my-6 mb-[60px]">
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-bold mb-4">Reviews</h3>
           {!userReview && (
@@ -252,7 +282,7 @@ export default function DetailPage() {
             <p>{reviews.length} {reviews.length > 1 ? 'reviews' : 'review'}</p>
           </div>
         ) : (
-          <p>Be the first to add a review to this Mallzonix Item.</p>
+          <p>Be the first to add a review to this product on Mallzonix.</p>
         )}
 
         {reviews.length > 0 && (

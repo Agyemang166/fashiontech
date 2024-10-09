@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@mui/material';
-import { auth } from '../../services/firebaseConfig'; // Adjust the path as needed
+import { auth } from '../services/firebaseConfig'; // Adjust the path as needed
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 

@@ -23,7 +23,6 @@ const Checkout = () => {
   // Pre-fill the user's name and email when the component mounts
   useEffect(() => {
     if (currentUser) {
-      console.log('Pre-filling user details:', currentUser);
       setName(currentUser.name || ''); // Assuming the user object has a `name` property
       setEmail(currentUser.email || ''); // Assuming the user object has an `email` property
     } else {
@@ -37,7 +36,6 @@ const Checkout = () => {
       const total = cartProducts.reduce((total, item) => {
         return total + item.price * item.quantity;
       }, 0);
-      console.log('Total cart amount calculated:', total);
       return total;
     };
     setTotalAmount(calculateTotal());
@@ -59,13 +57,14 @@ const Checkout = () => {
     text: "Pay Now",
     onSuccess: async (response) => {
       console.log('Payment successful! Paystack response:', response);
-      alert("Payment Successful");
-
+      alert("we have successfully received your order. Thank you for shopping with MallZonix");
+  
       // Create the order and send email
       const orderId = await handleOrderCreation();
       clearCart();
       setIsSuccess(true);
       navigate('/');
+  
       // Prepare email data
       const emailData = {
         name,
@@ -73,34 +72,48 @@ const Checkout = () => {
         cartItems: cartProducts,
         totalAmount,
       };
-
-      // Send email notification
-      try {
-        console.log('Sending email data:', emailData); // Debugging line
-        const res = await fetch('https://mallzonix-backend1.onrender.com/api/sendOrderNotification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(emailData),
-        });
-
-        // Log the response to check for errors
-        if (!res.ok) {
-          throw new Error('Failed to send email');
+  
+      // Retry logic for sending email
+      const maxRetries = 10; // Maximum number of retries
+      const retryDelay = 8000; // 5 seconds delay between retries
+  
+      const sendEmailWithRetry = async (retryCount = 0) => {
+        try {
+          console.log(`Attempt ${retryCount + 1}: Sending email data...`);
+          const res = await fetch('https://mallzonix-backend1.onrender.com/api/sendOrderNotification', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailData),
+          });
+  
+          if (!res.ok) {
+            throw new Error('Failed to send email');
+          }
+  
+          console.log('Email sent successfully');
+        } catch (error) {
+          console.error('Error sending email:', error);
+  
+          if (retryCount < maxRetries) {
+            setTimeout(() => sendEmailWithRetry(retryCount + 1), retryDelay); // Retry after delay
+          } else {
+            console.error('Max retries reached. Email could not be sent.');
+          }
         }
-
-        console.log('Email sent successfully');
-      } catch (error) {
-        console.error('Error sending email:', error);
-      }
-
+      };
+  
+      // Initial attempt to send the email
+      sendEmailWithRetry();
+  
     },
     onClose: () => {
       console.warn("Transaction was not completed.");
-      alert("Transaction was not completed");
+      alert("Transaction was not completed. Please try again.");
     },
   };
+  
 
   // Function to handle order creation and storing in both collections
   const handleOrderCreation = async () => {

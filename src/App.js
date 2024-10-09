@@ -31,6 +31,7 @@ import Footwear from "./Screens/Footwear";
 import JelwelryAccessories from "./Screens/JewelryAccessories";
 import Electronics from "./Screens/Electronics";
 import Cosmetics from "./Screens/Cosmetics";
+import OrderDetails from "./pages/Order/OrderDetails";
 
 function App() {
   return (
@@ -49,6 +50,9 @@ function App() {
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/payment-options" element={<PaymentOption />} />
           <Route path="/order" element={<Order />} />
+          <Route path="/orders-details/:orderId" element={<OrderDetails />} />
+
+
           <Route path="/products/:id" element={<DetailPage />} />
           <Route path="/favorite-collection" element={<Favorite />} />
           <Route path="/cart-item" element={<OrderItem />} />

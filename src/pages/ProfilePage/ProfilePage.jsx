@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentUser } from '../../contexts/userContext'; // Adjust the path as needed
 import SignUp from '../../Auth/SignUp'; // Import the SignUp component
-import LogoutButton from "./LogoutButton";
+import LogoutButton from "../../Auth/LogoutButton";
 import { Box, Typography, Divider, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import { AccountCircle, ShoppingCart, Payment, ArrowForwardIos, FavoriteBorder } from '@mui/icons-material';
 

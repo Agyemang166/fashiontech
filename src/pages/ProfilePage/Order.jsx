@@ -1,51 +1,115 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useOrders } from '../../contexts/OrderContext'; // Import the orders context
 import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import emptyOrdersGif from '../../Assets/Empty.gif'; // Adjust the path to your empty GIF
 
 const OrdersPage = () => {
-  const { orders, loading, fetchMoreOrders } = useOrders(); // Get orders and loading state
+  const { orders, loading, loadMoreOrders, hasMore } = useOrders(); // Get orders, loading state, loadMoreOrders function, and hasMore
   const navigate = useNavigate(); // Initialize navigate function
+  const [activeTab, setActiveTab] = useState('all'); // State for active tab ('all', 'on-route', 'completed')
 
   // Function to handle order click
   const handleOrderClick = (orderId) => {
     navigate(`/orders-details/${orderId}`); // Navigate to order details page
   };
 
-  if (loading) return <div>Loading...</div>; // Loading state
+  // Function to filter orders based on active tab
+  const filteredOrders = () => {
+    switch (activeTab) {
+      case 'on-route':
+        return orders.filter(order => order.status === 'On-Route');
+      case 'completed':
+        return orders.filter(order => order.status === 'Received' || order.status === 'Completed');
+      default:
+        return orders; // 'all' tab shows all orders
+    }
+  };
+
+  // Loading state
+  if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="max-w-2xl mx-auto mt-5">
+    <div className="max-w-2xl mx-auto pb-7 bg-[#f7f7f7]">
       <h2 className="text-2xl font-bold mb-4 ml-3">Your Orders</h2>
-      {orders.length === 0 ? (
+
+      {/* Tabs for filtering orders */}
+      <div className="flex justify-center mb-5 space-x-3">
+        <span
+          className={`cursor-pointer text-lg px-2 py-0 rounded-[5px] ${
+            activeTab === 'all'
+              ? 'bg-black text-white' // Active tab styling
+              : 'bg-gray-300 text-black' // Inactive tab styling
+          }`}
+          onClick={() => setActiveTab('all')}
+        >
+          All Orders
+        </span>
+        <span
+          className={`cursor-pointer text-lg px-2 py-0 rounded-[5px] ${
+            activeTab === 'on-route'
+              ? 'bg-black text-white' // Active tab styling
+              : 'bg-gray-300 text-black' // Inactive tab styling
+          }`}
+          onClick={() => setActiveTab('on-route')}
+        >
+          On-Route
+        </span>
+        <span
+          className={`cursor-pointer text-lg px-2 py-0 rounded-[5px] ${
+            activeTab === 'completed'
+              ? 'bg-black text-white' // Active tab styling
+              : 'bg-gray-300 text-black' // Inactive tab styling
+          }`}
+          onClick={() => setActiveTab('completed')}
+        >
+          Received/Completed
+        </span>
+      </div>
+
+      {/* Display orders based on selected tab */}
+      {filteredOrders().length === 0 ? (
         <div className="flex flex-col items-center">
           <img src={emptyOrdersGif} alt="No Mallzonix Orders Available" className="w-1/2 mb-4" />
           <p className="text-gray-700">No orders available.</p>
           <button
-          onClick={() => navigate('/')}
-          className="bg-black text-white px-4 py-2 mt-4 rounded-md"
-        >
-          Shop Now
-        </button>
+            onClick={() => navigate('/')}
+            className="bg-black text-white px-4 py-2 mt-4 rounded-md"
+          >
+            Shop Now
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 px-3">
-          {orders.map(order => (
+          {filteredOrders().map(order => (
             <div
               key={order.id}
               onClick={() => handleOrderClick(order.id)} // Click to navigate
-              className="bg-white border border-gray-300 rounded-lg shadow-md p-2 cursor-pointer hover:shadow-lg transition"
+              className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 cursor-pointer hover:shadow-md transition-all duration-200 ease-in-out"
             >
-              <h3 className="text-lg font-semibold">Order ID: {order.id}</h3>
-              <p className="">Total Amount: GHS {order.totalAmount}</p>
-              <p className="text-sm text-gray-600">
-                Status: {order.status || 'Received by MALLZONIX'}
-              </p>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold text-gray-800">Order ID: {order.id}</h3>
+                <p className="text-sm text-gray-500">{new Date(order.createdAt.seconds * 1000).toLocaleString()}</p>
+              </div>
+
+              <div className="border-t border-gray-200 pt-2">
+                <p className="text-lg text-gray-900 font-medium mb-1">Total: GHS {order.totalAmount}</p>
+                {/* Conditional status color */}
+                <p className="text-sm text-gray-600">
+                  Status: <span className={`font-semibold ${order.status === 'Received' ? 'text-green-600' : order.status === 'On-Route' ? 'text-yellow-600' : 'text-blue-600'}`}>
+                    {order.status || 'Received by MALLZONIX'}
+                  </span>
+                </p>
+              </div>
+
+              <div className="flex justify-between items-center mt-4">
+                <p className="text-sm text-gray-500">Delivery Location: {order.deliveryLocation || 'N/A'}</p>
+                <button className="text-sm text-blue-600 font-semibold hover:underline">View Details</button>
+              </div>
             </div>
           ))}
-          {orders.length > 5 && ( // Only show button if more than 5 orders
+          {hasMore && ( // Only show button if there are more orders to load
             <button 
-              onClick={fetchMoreOrders} 
+              onClick={loadMoreOrders} 
               className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
             >
               Load More Orders

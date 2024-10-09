@@ -101,7 +101,7 @@ export default function OrderItem() {
                   <div>
                     <div className="flex justify-between text-base font-medium text-gray-900">
                       <h3>
-                        <a href={`/detailspage/${item.id}`}>{item.productName }</a>
+                        <a href={`/products/${item.id}`}>{item.productName }</a>
                       </h3>
                       <div className="flex flex-col items-end">
                       <p className="ml-4">

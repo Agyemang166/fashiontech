@@ -9,7 +9,7 @@ const HomePage = () => {
   const { productList, loading } = useProducts(); // Make sure loading state is included
 
   return (
-    <div>
+    <div className='p-2'>
       <Carousel />
       <div className='p-2'>
         <CircularMenuGrid />

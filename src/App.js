@@ -19,6 +19,19 @@ import Checkout from "./pages/Order/Checkout";
 import DetailPage from "./pages/DetailPage/DetailPage";
 import Favorite from "./pages/Favorite/favorite";
 
+import NewIn from "./Screens/NewIn";
+import AgyemangDevSobolo from "./Screens/AgyemangDevSobolo";
+import Laptops from "./Screens/Laptops";
+import Men from "./Screens/Men";
+import Women from "./Screens/Women";
+import ElectronicAccessories from "./Screens/ElectronicAccessories";
+import MobilePhones from "./Screens/MobilePhones";
+import Perfumes from "./Screens/Perfumes";
+import Footwear from "./Screens/Footwear";
+import JelwelryAccessories from "./Screens/JewelryAccessories";
+import Electronics from "./Screens/Electronics";
+import Cosmetics from "./Screens/Cosmetics";
+
 function App() {
   return (
     <CurrentUserProvider>
@@ -41,6 +54,18 @@ function App() {
           <Route path="/cart-item" element={<OrderItem />} />
           <Route path="/checkout" element={<Checkout />} />
           
+          <Route path="/new-in" element={<NewIn />}/>
+          <Route path="/agyemangdev-sobolo" element={<AgyemangDevSobolo />}/>
+          <Route path="/laptops" element={<Laptops />}/>
+          <Route path="/men-clothing" element={<Men />}/>
+          <Route path="/women-clothing" element={<Women />}/>
+          <Route path="/electronics-accesories" element={<ElectronicAccessories />}/>
+          <Route path="/mobile-phones" element={<MobilePhones />}/>
+          <Route path="/perfumes" element={<Perfumes />}/>
+          <Route path="/footwear" element={<Footwear />}/>
+          <Route path="/jewelry-accessories" element={<JelwelryAccessories />}/>
+          <Route path="/electronics" element={<Electronics />}/>
+          <Route path="/cosmetics" element={<Cosmetics />}/>
         </Routes>
       </Router>
       </OrdersProvider>

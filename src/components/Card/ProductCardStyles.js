@@ -3,7 +3,7 @@ const styles = {
     backgroundColor: '#f0f0f0',
     borderRadius: '5px',
     padding: '8px', // Reduced padding
-    width: '200px',
+    width: '192px',
     textAlign: 'left',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     display: 'flex',

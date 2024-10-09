@@ -63,7 +63,9 @@ const Checkout = () => {
 
       // Create the order and send email
       const orderId = await handleOrderCreation();
-
+      clearCart();
+      setIsSuccess(true);
+      navigate('/');
       // Prepare email data
       const emailData = {
         name,
@@ -93,9 +95,6 @@ const Checkout = () => {
         console.error('Error sending email:', error);
       }
 
-      clearCart();
-      setIsSuccess(true);
-      navigate('/');
     },
     onClose: () => {
       console.warn("Transaction was not completed.");
@@ -236,7 +235,8 @@ const Checkout = () => {
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             placeholder="Any special instructions for delivery"
           />
-        </div>
+          <p className='text-red-500 font-bold'>Please, note deliveries are only made in Kumasi for now</p>
+          </div>
 
         <div className="mt-6">
           <PaystackButton

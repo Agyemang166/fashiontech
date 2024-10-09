@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FaHeart, FaStar, FaRegStar, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FaHeart } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProducts } from '../../contexts/ProductContext'; 
 import { addToCart, removeFromCart, toggleFavorite, subscribeToFavorites, subscribeToCartItem, updateCartItemQuantity, fetchCartItemQuantity } from '../../components/Card/ProductCardFunctions';
 import { db } from '../../services/firebaseConfig'; 
 import { useCurrentUser } from '../../contexts/userContext';
-import { collection, doc, updateDoc, arrayUnion, getDoc, arrayRemove } from "firebase/firestore"; 
+import { doc, getDoc } from "firebase/firestore"; 
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css"; 
 import DetailPagePlaceholder from './DetailPagePlaceholder';
+import ReviewSection from './ReviewSection';
+import RelatedProducts from './RelatedProducts';
 
 const settings = {
   dots: true,
@@ -32,13 +34,12 @@ export default function DetailPage() {
   const [isInCart, setIsInCart] = useState(false);
   const [currentPrice, setCurrentPrice] = useState(0); // Initialize to 0
   const [quantity, setQuantity] = useState(1); 
-  const [reviewText, setReviewText] = useState(''); 
-  const [rating, setRating] = useState(0); 
   const [reviews, setReviews] = useState([]); 
-  const [showReviewForm, setShowReviewForm] = useState(false); 
-  const [editingReview, setEditingReview] = useState(null); 
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
-  const userReview = useMemo(() => reviews.find(review => review.userId === userId), [reviews, userId]);
+  useEffect(() => {
+    window.scroll(0, 0);
+  }, []);
 
   useEffect(() => {
     if (product) {
@@ -49,7 +50,17 @@ export default function DetailPage() {
           setReviews(docSnap.data().reviews || []);
         }
       };
+
+      // Fetch related products based on the product category
+      const fetchRelatedProducts = () => {
+        const relatedProductList = productList.filter(
+          p => p.category === product.category && p.id !== product.id
+        );
+        setRelatedProducts(relatedProductList);
+      };
+
       fetchReviews();
+      fetchRelatedProducts();
 
       if (product.discount) {
         const discountedPrice = product.price - (product.price * (product.discount / 100));
@@ -57,8 +68,11 @@ export default function DetailPage() {
       } else {
         setCurrentPrice(product.price);
       }
+
+      // Log the current category
+      console.log("Current category:", product.category);
     }
-  }, [product]);
+  }, [product, productList]);
 
   useEffect(() => {
     if (userId && product) {
@@ -110,57 +124,6 @@ export default function DetailPage() {
   const incrementQuantity = useCallback(() => setQuantity(prev => prev + 1), []);
   const decrementQuantity = useCallback(() => setQuantity(prev => (prev > 1 ? prev - 1 : prev)), []);
 
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    if (!reviewText || rating === 0) {
-      alert('Please add a review and rating.');
-      return;
-    }
-
-    const newReview = {
-      userId,
-      text: reviewText,
-      rating,
-      date: new Date().toISOString(),
-    };
-
-    try {
-      const productRef = doc(db, 'products', product.id);
-      
-      if (editingReview) {
-        const updatedReviews = reviews.map((review) =>
-          review.userId === userId ? { ...review, text: reviewText, rating } : review
-        );
-        await updateDoc(productRef, { reviews: updatedReviews });
-        setReviews(updatedReviews);
-        setEditingReview(null);
-      } else {
-        await updateDoc(productRef, {
-          reviews: arrayUnion(newReview),
-        });
-        setReviews((prevReviews) => [...prevReviews, newReview]);
-      }
-
-      setReviewText('');
-      setRating(0);
-      setShowReviewForm(false);
-    } catch (error) {
-      console.error('Error adding review: ', error);
-    }
-  };
-
-  const handleDeleteReview = async (reviewToDelete) => {
-    try {
-      const productRef = doc(db, 'products', product.id);
-      await updateDoc(productRef, {
-        reviews: arrayRemove(reviewToDelete),
-      });
-      setReviews((prevReviews) => prevReviews.filter((review) => review !== reviewToDelete));
-    } catch (error) {
-      console.error('Error deleting review: ', error);
-    }
-  };
-
   useEffect(() => {
     if (product) {
       document.title = `${product.productName} - MALLZONIX`;
@@ -172,46 +135,21 @@ export default function DetailPage() {
     };
   }, [product]);
 
-  const handleEditReview = (review) => {
-    setReviewText(review.text);
-    setRating(review.rating);
-    setEditingReview(review);
-    setShowReviewForm(true);
-  };
-
-  const renderStarRating = useCallback((rating, setRating) => (
-    <div className="flex">
-      {[...Array(5)].map((_, index) => (
-        <button
-          key={index}
-          type="button"
-          onClick={() => setRating(index + 1)}
-        >
-          {index < rating ? (
-            <FaStar className="text-yellow-500" />
-          ) : (
-            <FaRegStar className="text-gray-400" />
-          )}
-        </button>
-      ))}
-    </div>
-  ), []);
-
-  if (loading) return <DetailPagePlaceholder/>;
+  if (loading) return <DetailPagePlaceholder />;
   if (!product) return <div>Product not found</div>;
 
   return (
-    <div className="bg-white max-w-2xl mx-auto p-4">
+    <div className="bg-white max-w-2xl mx-auto p-2">
       <div className="w-full overflow-hidden">
         <Slider {...settings} className="h-[400px] w-full">
           {product.images.map((image, index) => (
             <div key={index} className="flex items-center justify-center w-full">
-            <img
-              src={image}
-              alt={`${product.productName} ${index + 1} - MALLZONIX`}
-              className="w-full max-h-[450px] object-cover" // Use object-cover for proper fitting
-            />
-          </div>
+              <img
+                src={image}
+                alt={`${product.productName} ${index + 1} - MALLZONIX`}
+                className="w-full max-h-[450px] object-cover" // Use object-cover for proper fitting
+              />
+            </div>
           ))}
         </Slider>
       </div>
@@ -229,27 +167,35 @@ export default function DetailPage() {
       </div>
 
       <div className="flex items-center my-4">
-        <button onClick={decrementQuantity} className="bg-gray-300 rounded-l-md px-3 py-1">-</button>
+        <button 
+          onClick={decrementQuantity} 
+          className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded-l-md px-4 py-[9px]"
+        >
+          -
+        </button>
         <input
           type="text"
           value={quantity}
           readOnly
-          className="border border-gray-300 text-center p-1 w-12"
+          className="border border-gray-300 text-center p-2 w-12 h-full"
         />
-        <button onClick={incrementQuantity} className="bg-gray-300 rounded-r-md px-3 py-1">+</button>
+        <button 
+          onClick={incrementQuantity} 
+          className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold rounded-r-md px-4 py-[9px]"
+        >
+          +
+        </button>
       </div>
 
-
-      
-      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg flex justify-between items-center border-t-2 border-[ #b2a0a0]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg flex justify-between items-center border-t-2 border-[#b2a0a0] z-50">
       <button onClick={handleToggleFavorite}>
         {isFavorite ? (
-          <FaHeart className="text-red-600 mr-5" size={30} />
+          <FaHeart className="text-red-600 mr-5" size={32} />
         ) : (
-          <FaHeart className="text-gray-300 mr-5" size={30} />
+          <FaHeart className="text-gray-300 mr-5" size={32} />
         )}
       </button>
-    
+
       <button
         onClick={handleAddToCart}
         className={`w-full py-2 ${isInCart ? 'bg-red-500' : 'bg-green-500'} text-white rounded`}
@@ -258,76 +204,11 @@ export default function DetailPage() {
       </button>
     </div>
     
-
       <p className="text-1xl font-bold tracking-tight text-gray-900 mt-5">Product Description</p>
       <p className="tracking-tight text-gray-900">{product.description}</p>
 
       {/* Review Section */}
-      <div className="my-6 mb-[60px]">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-bold mb-4">Reviews</h3>
-          {!userReview && (
-            <button 
-              className="flex items-center text-blue-500 hover:text-blue-700"
-              onClick={() => setShowReviewForm((prev) => !prev)} 
-            >
-              <FaPlus className="mr-1" />
-              <span>Add your review</span>
-            </button>
-          )}
-        </div>
-
-        {reviews.length > 0 ? (
-          <div className="mb-4">
-            <p>{reviews.length} {reviews.length > 1 ? 'reviews' : 'review'}</p>
-          </div>
-        ) : (
-          <p>Be the first to add a review to this product on Mallzonix.</p>
-        )}
-
-        {reviews.length > 0 && (
-          reviews
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .map((review, index) => (
-              <div key={index} className="mb-4">
-                <div className="flex items-center">
-                  {renderStarRating(review.rating)}
-                  <p className="ml-2 text-sm text-gray-500">{new Date(review.date).toLocaleDateString()}</p>
-                  {review.userId === userId && (
-                    <div className="flex items-center ml-3 space-x-4">
-                      <button onClick={() => handleEditReview(review)} className="text-blue-500">
-                        <FaEdit /> 
-                      </button>
-                      <button onClick={() => handleDeleteReview(review)} className="text-red-500">
-                        <FaTrash />
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <p>{review.text}</p>
-              </div>
-            ))
-        )}
-
-        {showReviewForm && (
-          <form onSubmit={handleSubmitReview} className="mt-6">
-            <textarea
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              className="border p-2 w-full mb-4"
-              rows="4"
-              placeholder="Write your review here..."
-            />
-            <div className="mb-4">
-              <label>Rating: </label>
-              {renderStarRating(rating, setRating)}
-            </div>
-            <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded">
-              {editingReview ? 'Update Review' : 'Submit Review'}
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+      <ReviewSection productId={product.id} reviews={reviews} setReviews={setReviews} />
+      <RelatedProducts subcategory={product.category} currentProductId={product.id} />    </div>
   );
 }

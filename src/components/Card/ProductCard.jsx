@@ -91,8 +91,8 @@ const ProductCard = ({ product }) => {
       <Link to={`/products/${product.id}`}>
         <div>
           <h3 style={styles.name}>
-           {product.productName.length > 20 
-            ? `${product.productName.slice(0, 20)}...` 
+           {product.productName.length > 18 
+            ? `${product.productName.slice(0, 18)}...` 
             : product.productName}</h3>
           <div style={styles.priceContainer}>
             {product.discount > 0 && (

@@ -1,36 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { useCurrentUser } from '../../contexts/userContext'; // Importing the user context
-import { useCartProducts } from '../../contexts/CartContext'; // Import cart context to get total price
+import { useCurrentUser } from '../../contexts/userContext';
+import { useCartProducts } from '../../contexts/CartContext';
 import { PaystackButton } from 'react-paystack';
-import { db } from '../../services/firebaseConfig'; // Firestore configuration
-import { collection, addDoc } from 'firebase/firestore'; // Firestore methods
-import { useNavigate } from 'react-router-dom'; // Import useHistory for redirection
-import Confetti from 'react-confetti'; // Import confetti for success effect
+import { db } from '../../services/firebaseConfig';
+import { collection, addDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import Confetti from 'react-confetti';
+import ReactLoading from 'react-loading';
 
 const Checkout = () => {
-  const { currentUser } = useCurrentUser(); // Access the current user's details from the context
-  const { cartProducts, clearCart } = useCartProducts(); // Get cart products and clearCart function
+  const { currentUser } = useCurrentUser();
+  const { cartProducts, clearCart } = useCartProducts();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState(''); // Email field added
+  const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [deliveryLocation, setDeliveryLocation] = useState('');
   const [phone, setPhone] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
-  const [totalAmount, setTotalAmount] = useState(0); // To store total cart amount
-  const [isSuccess, setIsSuccess] = useState(false); // State to track payment success
-  const navigate = useNavigate(); // Hook for redirection
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const navigate = useNavigate();
 
-  // Pre-fill the user's name and email when the component mounts
   useEffect(() => {
     if (currentUser) {
-      setName(currentUser.name || ''); // Assuming the user object has a `name` property
-      setEmail(currentUser.email || ''); // Assuming the user object has an `email` property
+      setName(currentUser.name || '');
+      setEmail(currentUser.email || '');
     } else {
       console.warn('No current user found!');
     }
   }, [currentUser]);
 
-  // Calculate the total amount of the cart
   useEffect(() => {
     const calculateTotal = () => {
       const total = cartProducts.reduce((total, item) => {
@@ -41,9 +43,8 @@ const Checkout = () => {
     setTotalAmount(calculateTotal());
   }, [cartProducts]);
 
-  // Paystack configuration
   const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
-  const amount = totalAmount * 100; // Multiply total by 100 as Paystack uses the smallest currency unit (i.e. GHS * 100)
+  const amount = totalAmount * 100;
 
   const componentProps = {
     email,
@@ -57,26 +58,26 @@ const Checkout = () => {
     text: "Pay Now",
     onSuccess: async (response) => {
       console.log('Payment successful! Paystack response:', response);
-      alert("we have successfully received your order. Thank you for shopping with MallZonix");
-  
-      // Create the order and send email
+      alert("We have successfully received your order. Thank you for shopping with MallZonix");
+
       const orderId = await handleOrderCreation();
       clearCart();
       setIsSuccess(true);
-      navigate('/');
-  
-      // Prepare email data
+
       const emailData = {
         name,
         email,
         cartItems: cartProducts,
         totalAmount,
       };
-  
-      // Retry logic for sending email
-      const maxRetries = 10; // Maximum number of retries
-      const retryDelay = 8000; // 5 seconds delay between retries
-  
+
+      setLoadingEmail(true);
+      setEmailSuccess(false);
+      setEmailError(false);
+
+      const maxRetries = 10;
+      const retryDelay = 8000;
+
       const sendEmailWithRetry = async (retryCount = 0) => {
         try {
           console.log(`Attempt ${retryCount + 1}: Sending email data...`);
@@ -87,38 +88,41 @@ const Checkout = () => {
             },
             body: JSON.stringify(emailData),
           });
-  
+
           if (!res.ok) {
             throw new Error('Failed to send email');
           }
-  
+
           console.log('Email sent successfully');
+          setEmailSuccess(true);
+          clearCart();
+          alert("Order receipt generated and sent to your email.");
+          navigate('/');
         } catch (error) {
           console.error('Error sending email:', error);
-  
           if (retryCount < maxRetries) {
-            setTimeout(() => sendEmailWithRetry(retryCount + 1), retryDelay); // Retry after delay
+            setTimeout(() => sendEmailWithRetry(retryCount + 1), retryDelay);
           } else {
             console.error('Max retries reached. Email could not be sent.');
+            setEmailError(true);
+            alert("There was an issue sending your order receipt. Please Check Your Orders for receipt");
+            navigate('/');
           }
+        } finally {
+          setLoadingEmail(false);
         }
       };
-  
-      // Initial attempt to send the email
+
       sendEmailWithRetry();
-  
     },
     onClose: () => {
       console.warn("Transaction was not completed.");
       alert("Transaction was not completed. Please try again.");
     },
   };
-  
 
-  // Function to handle order creation and storing in both collections
   const handleOrderCreation = async () => {
     try {
-      // Create an order in the main orders collection
       const ordersRef = collection(db, 'orders');
       const orderData = {
         userId: currentUser.id,
@@ -132,13 +136,8 @@ const Checkout = () => {
         cartItems: cartProducts,
         createdAt: new Date(),
       };
-      const orderDocRef = await addDoc(ordersRef, orderData); // Save order to main collection
-
-      // Create a subcollection for the user
-      const userOrdersRef = collection(db, 'users', currentUser.id, 'orders');
-      await addDoc(userOrdersRef, { ...orderData, orderId: orderDocRef.id }); // Save order to user-specific subcollection
-
-      return orderDocRef.id; // Return the order ID if needed
+      const orderDocRef = await addDoc(ordersRef, orderData);
+      return orderDocRef.id;
     } catch (error) {
       console.error('Error creating order:', error);
     }
@@ -146,7 +145,6 @@ const Checkout = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Perform form validation
     if (!name || !email || !address || !deliveryLocation || !phone) {
       alert("Please fill in all required fields.");
       console.warn('Form validation failed. Missing required fields.');
@@ -156,109 +154,114 @@ const Checkout = () => {
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-lg overflow-hidden mt-5">
-      {isSuccess && <Confetti />} {/* Show confetti if payment is successful */}
+      {isSuccess && <Confetti />}
       <div className="px-4 py-2">
         <h2 className="text-1xl font-bold tracking-tight text-gray-900">Checkout</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="px-4 py-6">
+      {/* Conditionally render the form or the messages based on isSuccess */}
+      {isSuccess ? (
         <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-            placeholder="Enter your name"
-          />
+          {loadingEmail ? (
+            <div className="flex items-center justify-center">
+              <ReactLoading type="spin" color="#000" height={30} width={30} />
+              <span className="ml-2">Wait for order receipt to be generated. Please wait till you see an alert and click okay.</span>
+              <span className="ml-2 text-center">Generating...</span>
+            </div>
+          ) : emailSuccess ? (
+            <div className="text-green-600">Order receipt generated and sent to your email.</div>
+          ) : emailError ? (
+            <div className="text-red-600">There was an issue sending your order receipt. Please contact support.</div>
+          ) : null}
         </div>
-
-        <div className="mb-4">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-            placeholder="Enter your email"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-            Address
-          </label>
-          <input
-            type="text"
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            required
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-            placeholder="Enter your address"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="delivery-location" className="block text-sm font-medium text-gray-700">
-            Delivery Location
-          </label>
-          <input
-            type="text"
-            id="delivery-location"
-            value={deliveryLocation}
-            onChange={(e) => setDeliveryLocation(e.target.value)}
-            required
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-            placeholder="Please Enter Valid Delivery Location"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-            placeholder="Enter your phone number"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="delivery-instructions" className="block text-sm font-medium text-gray-700">
-            Delivery Instructions
-          </label>
-          <textarea
-            id="delivery-instructions"
-            value={deliveryInstructions}
-            onChange={(e) => setDeliveryInstructions(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-            placeholder="Any special instructions for delivery"
-          />
-          <p className='text-red-500 font-bold'>Please, note deliveries are only made in Kumasi for now</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="px-4 py-6">
+          <div className="mb-4">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              placeholder="Enter your name"
+            />
           </div>
 
-        <div className="mt-6">
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              placeholder="Enter your email"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
+            <input
+              type="text"
+              id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              placeholder="Enter your address"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="delivery-location" className="block text-sm font-medium text-gray-700">Delivery Location</label>
+            <input
+              type="text"
+              id="delivery-location"
+              value={deliveryLocation}
+              onChange={(e) => setDeliveryLocation(e.target.value)}
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              placeholder="Please Enter Valid Delivery Location"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              placeholder="Enter your phone number"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="delivery-instructions" className="block text-sm font-medium text-gray-700">Delivery Instructions</label>
+            <textarea
+              id="delivery-instructions"
+              value={deliveryInstructions}
+              onChange={(e) => setDeliveryInstructions(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              placeholder="Enter any delivery instructions"
+            />
+          </div>
+
+          <div className="mb-4">
+            <span className="text-lg font-bold">Total Amount: GHS {totalAmount}</span>
+          </div>
           <PaystackButton
-            className={`bg-indigo-600 text-white px-6 py-3 rounded-md ${!name || !email || !address || !deliveryLocation || !phone ? 'opacity-50 cursor-not-allowed' : ''}`}
-            {...componentProps}
-            disabled={!name || !email || !address || !deliveryLocation || !phone} // Disable button if fields are empty
-          />
-        </div>
-      </form>
+          className={`bg-indigo-600 text-white px-6 py-3 rounded-md ${!name || !email || !address || !deliveryLocation || !phone ? 'opacity-50 cursor-not-allowed' : ''}`}
+          {...componentProps}
+          disabled={!name || !email || !address || !deliveryLocation || !phone} // Disable button if fields are empty
+        />
+        </form>
+      )}
     </div>
   );
 };

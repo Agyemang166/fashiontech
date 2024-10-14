@@ -6,7 +6,7 @@ import emptyOrdersGif from '../../Assets/Empty.gif'; // Adjust the path to your 
 const OrdersPage = () => {
   const { orders, loading, loadMoreOrders, hasMore } = useOrders(); // Get orders, loading state, loadMoreOrders function, and hasMore
   const navigate = useNavigate(); // Initialize navigate function
-  const [activeTab, setActiveTab] = useState('all'); // State for active tab ('all', 'on-route', 'completed')
+  const [activeTab, setActiveTab] = useState('all'); // State for active tab ('all', 'On-Route', 'Delivered')
 
   // Function to handle order click
   const handleOrderClick = (orderId) => {
@@ -16,13 +16,26 @@ const OrdersPage = () => {
   // Function to filter orders based on active tab
   const filteredOrders = () => {
     switch (activeTab) {
-      case 'on-route':
+      case 'On-Route':
         return orders.filter(order => order.status === 'On-Route');
-      case 'completed':
-        return orders.filter(order => order.status === 'Received' || order.status === 'Completed');
+      case 'Delivered':
+        return orders.filter(order => order.status === 'Received' || order.status === 'Delivered');
       default:
         return orders; // 'all' tab shows all orders
     }
+  };
+
+  // Helper function to format timestamps
+  const formatTimestamp = (timestamp) => {
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    }).format(new Date(timestamp.seconds * 1000));
   };
 
   // Loading state
@@ -46,23 +59,23 @@ const OrdersPage = () => {
         </span>
         <span
           className={`cursor-pointer text-lg px-2 py-0 rounded-[5px] ${
-            activeTab === 'on-route'
+            activeTab === 'On-Route'
               ? 'bg-black text-white' // Active tab styling
               : 'bg-gray-300 text-black' // Inactive tab styling
           }`}
-          onClick={() => setActiveTab('on-route')}
+          onClick={() => setActiveTab('On-Route')}
         >
           On-Route
         </span>
         <span
           className={`cursor-pointer text-lg px-2 py-0 rounded-[5px] ${
-            activeTab === 'completed'
+            activeTab === 'Delivered'
               ? 'bg-black text-white' // Active tab styling
               : 'bg-gray-300 text-black' // Inactive tab styling
           }`}
-          onClick={() => setActiveTab('completed')}
+          onClick={() => setActiveTab('Delivered')}
         >
-          Received/Completed
+          Received/Delivered
         </span>
       </div>
 
@@ -86,19 +99,32 @@ const OrdersPage = () => {
               onClick={() => handleOrderClick(order.id)} // Click to navigate
               className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 cursor-pointer hover:shadow-md transition-all duration-200 ease-in-out"
             >
-              <div className="flex justify-between items-center mb-2">
+              <div className="items-center mb-2">
                 <h3 className="text-lg font-semibold text-gray-800">Order ID: {order.id}</h3>
-                <p className="text-sm text-gray-500">{new Date(order.createdAt.seconds * 1000).toLocaleString()}</p>
+                <p className="text-sm text-gray-500">                    
+                  {formatTimestamp(order.createdAt)}
+                </p>
               </div>
 
               <div className="border-t border-gray-200 pt-2">
                 <p className="text-lg text-gray-900 font-medium mb-1">Total: GHS {order.totalAmount}</p>
                 {/* Conditional status color */}
                 <p className="text-sm text-gray-600">
-                  Status: <span className={`font-semibold ${order.status === 'Received' ? 'text-green-600' : order.status === 'On-Route' ? 'text-yellow-600' : 'text-blue-600'}`}>
+                  Status: <span className={`font-semibold ${order.status === 'Delivered' ? 'text-green-600' : order.status === 'On-Route' ? 'text-yellow-600' : 'text-blue-600'}`}>
                     {order.status || 'Received by MALLZONIX'}
                   </span>
                 </p>
+                {/* Display the appropriate timestamp based on the status */}
+                {order.status === 'On-Route' && order.onRouteTimestamp && (
+                  <p className="text-sm text-gray-500">
+                    On-Route: {formatTimestamp(order.onRouteTimestamp)}
+                  </p>
+                )}
+                {order.status === 'Delivered' && order.deliveredTimestamp && (
+                  <p className="text-sm text-gray-500">
+                    Delivered: {formatTimestamp(order.deliveredTimestamp)}
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-between items-center mt-4">

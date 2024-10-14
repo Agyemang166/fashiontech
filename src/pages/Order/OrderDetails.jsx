@@ -21,11 +21,11 @@ const OrderDetails = () => {
     return <div>Loading order details...</div>;
   }
 
-  const { cartItems, deliveryLocation, email, name, phone, status, totalAmount, createdAt } = order;
+  const { cartItems, deliveryLocation, email, name, phone, status, totalAmount, createdAt, onRouteTimestamp, deliveredTimestamp } = order;
 
   // Determine the status color
   const statusClass = () => {
-    if (status === 'Received') {
+    if (status === 'Delivered') {
       return 'bg-green-100 text-green-800';
     } else if (status === 'On-Route') {
       return 'bg-yellow-100 text-yellow-800';
@@ -34,9 +34,24 @@ const OrderDetails = () => {
     }
   };
 
+  // Format the date if timestamp is available, otherwise show "Not yet available"
+  const formatDate = (timestamp) => {
+    return timestamp
+      ? new Intl.DateTimeFormat('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        }).format(new Date(timestamp.seconds * 1000))
+      : 'Not yet available';
+  };
+
   return (
-    <div className="bg-white min-h-screen ">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl  p-6">
+    <div className="bg-white min-h-screen">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl p-6">
         {/* Order Header */}
         <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
           <h2 className="text-3xl font-bold text-gray-800">Order Details</h2>
@@ -50,7 +65,13 @@ const OrderDetails = () => {
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-700">Order ID: {order.id}</h3>
           <p className="text-sm text-gray-500">
-            Date: {new Date(createdAt.seconds * 1000).toLocaleString()}
+            Ordered on {formatDate(createdAt)}
+          </p>
+          <p className="text-sm text-gray-500">
+            On-Route on: {formatDate(onRouteTimestamp)}
+          </p>
+          <p className="text-sm text-gray-500">
+            Delivered on: {formatDate(deliveredTimestamp)}
           </p>
         </div>
 
@@ -91,12 +112,6 @@ const OrderDetails = () => {
           <h3 className="text-lg font-semibold text-gray-800">Total Amount</h3>
           <p className="text-2xl font-bold text-gray-900">GHS {totalAmount.toFixed(2)}</p>
         </div>
-
-        {/* Optional Notes Section */}
-        {/* <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-700">Notes</h3>
-          <p className="text-sm text-gray-600">Special instructions can be added here.</p>
-        </div> */}
       </div>
     </div>
   );

@@ -58,7 +58,7 @@ const Checkout = () => {
     text: "Pay Now",
     onSuccess: async (response) => {
       console.log('Payment successful! Paystack response:', response);
-      alert("We have successfully received your order. Thank you for shopping with MallZonix");
+      alert("We have successfully received your order. Thank you for shopping with MallZonix. Kindly wait for an email order confirmation before leaving the screen.");
 
       const orderId = await handleOrderCreation();
       clearCart();
@@ -156,22 +156,24 @@ const Checkout = () => {
     <div className="max-w-2xl mx-auto bg-white rounded-lg overflow-hidden mt-5">
       {isSuccess && <Confetti />}
       <div className="px-4 py-2">
-        <h2 className="text-1xl font-bold tracking-tight text-gray-900">Checkout</h2>
+        <h2 className="text-1xl font-bold tracking-tight text-gray-900">Checkout is completed. Email is Being Sent. Hold on</h2>
       </div>
 
       {/* Conditionally render the form or the messages based on isSuccess */}
       {isSuccess ? (
         <div className="mb-4">
           {loadingEmail ? (
+            <div className="flex flex-col items-center justify-center min-h-screen">
             <div className="flex items-center justify-center">
-              <ReactLoading type="spin" color="#000" height={30} width={30} />
-              <span className="ml-2">Wait for order receipt to be generated. Please wait till you see an alert and click okay.</span>
-              <span className="ml-2 text-center">Generating...</span>
+              <ReactLoading type="spin" color="#000" height={50} width={50} />
+              <p className="ml-2 text-center">Wait for order receipt to be generated. Please wait till you see an alert and click okay.</p>
             </div>
+            <p className="mt-2 text-center">Generating...</p>
+          </div>
           ) : emailSuccess ? (
             <div className="text-green-600">Order receipt generated and sent to your email.</div>
           ) : emailError ? (
-            <div className="text-red-600">There was an issue sending your order receipt. Please contact support.</div>
+            <div className="text-red-600">There was an issue sending your order receipt. Check your <a href="https://mallzonix/order">orders</a>.</div>
           ) : null}
         </div>
       ) : (

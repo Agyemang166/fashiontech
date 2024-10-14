@@ -40,7 +40,8 @@ const Navbar = () => {
               <CartIcon />
             </>
           ) : (
-            <SearchBar closeSearch={toggleSearch} />
+            <SearchBar closeSearch={toggleSearch} 
+            aria-label='Search button'/>
           )}
         </div>
       </div>

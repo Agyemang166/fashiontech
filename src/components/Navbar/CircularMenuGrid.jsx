@@ -28,7 +28,7 @@ const CircularMenuGrid = () => {
             <div className="flex flex-col items-center space-y-2">
               {/* Circular Image */}
               <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full overflow-hidden bg-gray-200">
-                <img src={item.icon} alt={item.name} className="w-full h-full object-cover" />
+                <img src={item.icon} alt={`${item.name} image`} className="w-full h-full object-cover" />
               </div>
               {/* Menu Item Text */}
               <span className="text-sm font-medium text-gray-700">{item.name}</span>
@@ -47,7 +47,7 @@ const CircularMenuGrid = () => {
           )}
           <span
             onClick={handleShowMore}
-            className="text-blue-500 cursor-pointer underline text-sm font-semibold"
+            className="text-[#0002a3] cursor-pointer underline text-sm font-semibold"
           >
             {showMore ? 'Show Less' : 'Show More'}
           </span>
